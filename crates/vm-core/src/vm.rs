@@ -18,3 +18,15 @@ impl Vm {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_vm_new() {
+        let vm = Vm::new();
+        assert_eq!(vm.stack.len(), 0);
+        assert_eq!(vm.pc, 0);
+    }
+}
