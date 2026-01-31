@@ -7,3 +7,5 @@ edition = "2021"
 serde.workspace = true
 thiserror.workspace = true
 log.workspace = true
+hex = "0.4"
+crypto = { path = "../crypto" }

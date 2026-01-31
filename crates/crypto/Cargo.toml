@@ -7,3 +7,6 @@ edition = "2021"
 serde.workspace = true
 thiserror.workspace = true
 log.workspace = true
+sha2 = "0.10"
+aes-gcm = "0.10"
+aead = "0.5"
