@@ -29,4 +29,17 @@ mod tests {
         assert_eq!(vm.stack.len(), 0);
         assert_eq!(vm.pc, 0);
     }
+
+    #[test]
+    fn test_vm_run_empty() {
+        let mut vm = Vm::new();
+        let result = vm.run(&[]);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_error_display() {
+        let err = VmError::StackUnderflow;
+        assert_eq!(format!("{}", err), "Stack underflow");
+    }
 }
