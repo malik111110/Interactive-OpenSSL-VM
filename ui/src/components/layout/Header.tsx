@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Zap, Cpu, Play, StepForward, RotateCcw } from 'lucide-react';
+import { Shield, Zap, Cpu, Play, RotateCcw } from 'lucide-react';
 import type { VmStatus } from '../../types/vm';
 
 interface HeaderProps {
@@ -7,66 +7,85 @@ interface HeaderProps {
     fuel: number;
     pc: number;
     onRun: () => void;
-    onStep: () => void;
     onReset: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ status, fuel, pc, onRun, onStep, onReset }) => {
+export const Header: React.FC<HeaderProps> = ({ status, fuel, pc, onRun, onReset }) => {
     return (
-        <header className="flex items-center justify-between" style={{ height: 64, borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)', padding: '0 1.5rem', zIndex: 10 }}>
-            <div className="flex items-center gap-4">
-                <div style={{ padding: 8, background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: 8, color: 'var(--accent-blue)' }}>
-                    <Shield size={20} />
-                </div>
-                <div>
-                    <h1 style={{ fontSize: '14px', fontWeight: 'bold' }}>
-                        OpenSSL VM
-                        <span style={{ fontSize: '10px', background: 'var(--bg-accent)', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: 4, marginLeft: 8, fontWeight: 'normal', fontFamily: 'var(--font-mono)' }}>
-                            v0.1.0
-                        </span>
-                    </h1>
-                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Interactive Virtual Sandbox</p>
+        <header className="flex items-center justify-between px-8 relative z-50" style={{ height: '72px', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-sidebar)' }}>
+            {/* Decorative backdrop glow */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[rgba(56,189,248,0.03)] to-transparent pointer-events-none" />
+
+            <div className="flex items-center gap-6 relative z-10">
+                <div className="flex items-center gap-4 group">
+                    <div className="flex items-center justify-center p-2.5 bg-[#0a0a0f] border border-[rgba(255,255,255,0.05)] rounded-xl text-[#38bdf8] shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+                        <Shield size={22} className="glow-text" />
+                    </div>
+                    <div>
+                        <h1 className="flex items-center gap-2" style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.3px' }}>
+                            OPENSSL VM
+                            <span style={{ fontSize: '10px', backgroundColor: 'rgba(56,189,248,0.1)', color: '#38bdf8', padding: '2px 8px', borderRadius: '100px', fontFamily: 'var(--font-mono)', fontWeight: 700, border: '1px solid rgba(56,189,248,0.2)' }}>
+                                PRO-ENV
+                            </span>
+                        </h1>
+                        <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.7 }}>
+                            SessionID: {Math.random().toString(16).slice(2, 6).toUpperCase()}
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 6 }}>
-                        <Zap size={14} style={{ color: fuel < 20 ? 'var(--accent-amber)' : 'var(--text-muted)' }} />
-                        <span className="mono" style={{ fontSize: '11px', fontWeight: 'bold' }}>FUEL: {fuel}%</span>
+            <div className="flex items-center gap-8 relative z-10">
+                <div className="flex items-center gap-4">
+                    {/* Status Metrics */}
+                    <div className="flex flex-col items-end gap-1">
+                        <span style={{ fontSize: '8px', fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Energy Reserve</span>
+                        <div className="flex items-center gap-3 px-4 py-1.5 bg-[#0a0a0a] border border-[rgba(255,255,255,0.05)] rounded-lg">
+                            <Zap size={13} className={fuel < 20 ? 'text-[#f87171] animate-pulse' : 'text-[#38bdf8]'} />
+                            <div style={{ width: '96px', height: '4px', backgroundColor: '#1a1a1a', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div
+                                    className="h-full transition-all duration-500"
+                                    style={{
+                                        width: `${fuel}%`,
+                                        backgroundColor: fuel < 20 ? '#f87171' : '#38bdf8',
+                                        boxShadow: `0 0 10px ${fuel < 20 ? '#f87171' : '#38bdf8'}`,
+                                        borderRadius: '4px'
+                                    }}
+                                />
+                            </div>
+                            <span className="mono" style={{ fontSize: '11px', fontWeight: 700, color: '#f4f4f5', width: '32px', textAlign: 'right' }}>{fuel}%</span>
+                        </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 6 }}>
-                        <Cpu size={14} style={{ color: 'var(--text-muted)' }} />
-                        <span className="mono" style={{ fontSize: '11px', fontWeight: 'bold' }}>PC: {pc.toString().padStart(3, '0')}</span>
+
+                    <div className="flex flex-col items-end gap-1">
+                        <span style={{ fontSize: '8px', fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Cycle Counter</span>
+                        <div className="flex items-center gap-3 px-4 py-1.5 bg-[#0a0a0a] border border-[rgba(255,255,255,0.05)] rounded-lg min-w-[100px] justify-center">
+                            <Cpu size={13} style={{ color: 'var(--text-dim)' }} />
+                            <span className="mono" style={{ fontSize: '11px', fontWeight: 700, color: '#ffffff' }}>PC_{pc.toString().padStart(3, '0')}</span>
+                        </div>
                     </div>
                 </div>
 
-                <div style={{ width: 1, height: 24, background: 'var(--border-color)' }} />
+                <div style={{ width: '1px', height: '32px', backgroundColor: 'rgba(255,255,255,0.05)', margin: '0 8px' }} />
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={onRun}
                         disabled={status === 'running'}
-                        className="btn-primary"
-                        style={{ fontSize: '12px' }}
+                        className="btn btn-primary"
+                        style={{ height: '40px', padding: '0 24px' }}
                     >
-                        <Play size={14} fill="currentColor" />
-                        Run
+                        <Play size={15} fill="currentColor" />
+                        <span style={{ letterSpacing: '-0.2px' }}>INITIALIZE</span>
                     </button>
-                    <button
-                        onClick={onStep}
-                        disabled={status === 'running'}
-                        className="btn-secondary"
-                        style={{ fontSize: '12px', padding: '0.5rem 0.75rem' }}
-                    >
-                        <StepForward size={14} />
-                        Step
-                    </button>
+
                     <button
                         onClick={onReset}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}
+                        className="btn btn-ghost"
+                        style={{ padding: '10px', borderRadius: '12px' }}
+                        title="Reset VM"
                     >
-                        <RotateCcw size={16} />
+                        <RotateCcw size={18} />
                     </button>
                 </div>
             </div>

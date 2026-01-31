@@ -12,9 +12,10 @@ import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
-import { FileCode } from 'lucide-react';
+import { FileCode, Sparkles } from 'lucide-react';
 
 const DEFAULT_CODE = `// Interactive OpenSSL VM DSL
+// Perform cryptographic operations on the stack
 PUSH "hello world"
 HASH
 PUSH "mykey"
@@ -44,7 +45,6 @@ export const VmPage: React.FC = () => {
         }
 
         if (cmd === 'clear') {
-            // Logic would be in hook if needed
             return;
         }
 
@@ -57,49 +57,56 @@ export const VmPage: React.FC = () => {
         if (dsl) {
             execute(dsl);
         } else {
-            addLog(`Error: Command not found: ${cmd}. Type 'help' for available commands.`);
+            addLog(`Error: Command initialization failed. Unknown directive: '${cmd}'`);
         }
     };
 
     return (
-        <div className="flex flex-col h-full w-full bg-primary overflow-hidden">
+        <div className="vm-app flex flex-col h-screen w-full select-none">
             <Header
                 status={status}
                 fuel={fuel}
                 pc={pc}
                 onRun={() => execute(code)}
-                onStep={() => { }}
                 onReset={reset}
             />
 
             <main className="flex-1 flex overflow-hidden">
-                {/* Left Sidebar */}
-                <aside style={{ width: 300, borderRight: '1px solid var(--border-color)', background: 'var(--bg-secondary)', padding: '1.5rem', overflowY: 'auto' }} className="custom-scrollbar">
-                    <div className="flex flex-col gap-8">
-                        <LearningCenter />
-                        <div style={{ height: 1, background: 'var(--border-color)' }} />
-                        <InstructionSet />
-                    </div>
+                {/* Navigation / Instruction Sidebar */}
+                <aside
+                    className="flex flex-col overflow-y-auto custom-scrollbar p-8 space-y-10 flex-shrink-0"
+                    style={{ width: '320px', backgroundColor: 'var(--bg-sidebar)', borderRight: '1px solid var(--border-dim)' }}
+                >
+                    <LearningCenter />
+                    <div style={{ height: '1px', background: 'linear-gradient(to right, transparent, var(--border-subtle), transparent)' }} />
+                    <InstructionSet />
                 </aside>
 
-                {/* Center Content */}
-                <section className="flex-1 flex flex-col overflow-hidden">
+                {/* Central Workspace */}
+                <section className="flex-1 flex flex-col overflow-hidden relative" style={{ backgroundColor: 'var(--bg-page)' }}>
+                    {/* Subtle grid background */}
+                    <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+
                     {/* Editor Header */}
-                    <div className="flex items-center justify-between" style={{ height: 40, borderBottom: '1px solid var(--bg-accent)', background: 'var(--bg-secondary)', padding: '0 1rem' }}>
-                        <div className="flex items-center gap-2" style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)', fontWeight: 'bold' }}>
-                            <FileCode size={12} style={{ color: 'var(--accent-blue)' }} />
-                            script.osh
+                    <div className="flex items-center justify-between px-6 relative z-10" style={{ height: '48px', borderBottom: '1px solid var(--border-dim)', backgroundColor: 'var(--bg-sidebar)' }}>
+                        <div className="flex items-center gap-3">
+                            <FileCode size={14} className="text-[#38bdf8]" />
+                            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-[#52527a]">main_script.osh</span>
                         </div>
-                        <div className="mono" style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                            UTF-8 WASM_VM
+                        <div className="flex items-center gap-4 text-[9px] font-mono text-[#333] font-black uppercase tracking-widest">
+                            <span>Encoding: UTF-8</span>
+                            <span className="text-[#38bdf8]/40 flex items-center gap-1">
+                                <Sparkles size={10} />
+                                Cloud_Sync_Enabled
+                            </span>
                         </div>
                     </div>
 
-                    {/* Editor Area */}
-                    <div className="flex-1 relative overflow-auto custom-scrollbar" style={{ background: 'var(--bg-primary)' }}>
-                        <div className="absolute" style={{ top: 0, left: 0, width: 48, height: '100%', background: 'var(--bg-secondary)', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', paddingTop: 24, alignItems: 'center', color: 'var(--text-muted)', fontSize: 11, pointerEvents: 'none' }}>
+                    {/* Code Editor Container */}
+                    <div className="flex-1 relative overflow-auto custom-scrollbar relative z-10" style={{ backgroundColor: 'var(--bg-page)' }}>
+                        <div className="absolute top-0 left-0 h-full flex flex-col pt-6 items-center pointer-events-none select-none" style={{ width: '48px', backgroundColor: '#030303', borderRight: '1px solid var(--border-dim)', color: '#222', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
                             {code.split('\n').map((_, i) => (
-                                <div key={i} style={{ height: 21 }}>{i + 1}</div>
+                                <div key={i} style={{ height: '24px' }}>{i + 1}</div>
                             ))}
                         </div>
                         <Editor
@@ -109,18 +116,19 @@ export const VmPage: React.FC = () => {
                             padding={24}
                             style={{
                                 fontFamily: 'var(--font-mono)',
-                                fontSize: 13,
-                                color: 'var(--text-primary)',
+                                fontSize: 14,
+                                color: '#e4e4e7',
                                 marginLeft: 48,
                                 minHeight: '100%',
-                                lineHeight: '21px'
+                                lineHeight: '24px',
+                                letterSpacing: '-0.01em'
                             }}
-                            textareaClassName="focus:outline-none"
+                            textareaClassName="outline-none"
                         />
                     </div>
 
-                    {/* Terminal */}
-                    <div style={{ height: 280 }}>
+                    {/* Interactive Console UI */}
+                    <div style={{ height: '300px', borderTop: '1px solid var(--border-dim)' }}>
                         <Terminal
                             logs={logs}
                             status={status}
@@ -129,8 +137,11 @@ export const VmPage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* Right Sidebar */}
-                <aside style={{ width: 340, borderLeft: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
+                {/* State/Memory inspector */}
+                <aside
+                    className="flex-shrink-0"
+                    style={{ width: '340px', borderLeft: '1px solid var(--border-dim)', backgroundColor: 'var(--bg-sidebar)' }}
+                >
                     <StackInspector stack={stack} />
                 </aside>
             </main>

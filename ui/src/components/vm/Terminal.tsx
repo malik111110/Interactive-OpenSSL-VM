@@ -51,29 +51,52 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
     };
 
     return (
-        <div className="terminal-container flex flex-col h-full">
-            <div className="terminal-header flex items-center gap-2">
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: status === 'running' ? 'var(--accent-emerald)' : 'var(--text-muted)' }} />
-                Terminal Output
+        <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: '#030303' }}>
+            {/* Scanline Effect */}
+            <div className="scanline"></div>
+
+            {/* Terminal Header */}
+            <div className="flex items-center justify-between px-4 py-2 select-none" style={{ backgroundColor: '#080808', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <div className="flex items-center gap-3">
+                    <div
+                        className="transition-all duration-300"
+                        style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            backgroundColor: status === 'running' ? '#4ade80' : '#1e1e1e',
+                            boxShadow: status === 'running' ? '0 0 10px #4ade80' : 'none'
+                        }}
+                    />
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#52527a', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                        Virtual Console v2.0
+                    </span>
+                </div>
+                <div className="flex gap-2">
+                    <div style={{ width: '10px', height: '2px', backgroundColor: '#1e1e1e' }} />
+                    <div style={{ width: '10px', height: '2px', backgroundColor: '#1e1e1e' }} />
+                </div>
             </div>
 
+            {/* Logs Area */}
             <div
                 ref={scrollRef}
-                className="flex-1 overflow-auto p-4 custom-scrollbar"
+                className="flex-1 overflow-y-auto p-5 space-y-2 custom-scrollbar relative z-20"
+                style={{ fontFamily: 'var(--font-mono)', fontSize: '13px' }}
                 onClick={() => inputRef.current?.focus()}
-                style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}
             >
                 {logs.map((log, i) => (
-                    <div key={i} className="flex gap-2" style={{ marginBottom: '2px' }}>
-                        <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>$</span>
-                        <span style={{ color: log.includes('Error') ? 'var(--accent-red)' : 'var(--text-secondary)' }}>
+                    <div key={i} className="flex gap-3 leading-relaxed" style={{ opacity: 0.9 }}>
+                        <span style={{ color: '#38bdf8', userSelect: 'none', fontWeight: 700 }}>~</span>
+                        <span style={{ color: log.includes('Error') ? '#f87171' : '#e2e8f0' }}>
                             {log}
                         </span>
                     </div>
                 ))}
 
-                <form onSubmit={handleSubmit} className="flex gap-2 items-center" style={{ marginTop: '0.25rem' }}>
-                    <span style={{ color: 'var(--accent-emerald)', fontWeight: 'bold', flexShrink: 0 }}>➜</span>
+                {/* Active Command Line */}
+                <form onSubmit={handleSubmit} className="flex gap-3 items-center pt-2">
+                    <span style={{ color: '#4ade80', fontWeight: 900, userSelect: 'none' }}>➜</span>
                     <div className="relative flex-1">
                         <input
                             ref={inputRef}
@@ -83,23 +106,24 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
                             onKeyDown={handleKeyDown}
                             style={{
                                 width: '100%',
-                                background: 'transparent',
+                                backgroundColor: 'transparent',
                                 border: 'none',
                                 outline: 'none',
-                                color: 'var(--text-primary)',
-                                padding: 0,
-                                fontFamily: 'inherit',
-                                fontSize: 'inherit'
+                                color: '#ffffff',
+                                fontFamily: 'var(--font-mono)',
+                                padding: 0
                             }}
                             spellCheck={false}
                             autoComplete="off"
+                            placeholder="_"
                         />
-                        {input === '' && (
-                            <div className="cursor-blink" style={{ position: 'absolute', left: 0, top: 2 }} />
-                        )}
+                        {input === '' && <span className="terminal-cursor" />}
                     </div>
                 </form>
             </div>
+
+            {/* CRT Vignette shadow */}
+            <div className="absolute inset-0 pointer-events-none z-30" style={{ boxShadow: 'inset 0 0 60px rgba(0,0,0,0.5)' }} />
         </div>
     );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database } from 'lucide-react';
+import { Database, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { StackItem } from '../../types/vm';
 
@@ -9,52 +9,76 @@ interface StackInspectorProps {
 
 export const StackInspector: React.FC<StackInspectorProps> = ({ stack }) => {
     return (
-        <div className="flex flex-col h-full bg-secondary">
-            <div className="terminal-header flex items-center gap-2" style={{ padding: '0.75rem 1rem', background: 'var(--bg-accent)' }}>
-                <Database size={14} style={{ color: 'var(--accent-blue)' }} />
-                Memory Stack
+        <div className="flex flex-col h-full" style={{ backgroundColor: '#050505' }}>
+            {/* Header with gradient line */}
+            <div className="relative">
+                <div className="flex items-center gap-3 px-6 py-5" style={{ backgroundColor: '#080808' }}>
+                    <div className="p-1.5 rounded-md" style={{ backgroundColor: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)' }}>
+                        <Layers size={14} className="text-[#38bdf8]" />
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#9494b8' }}>
+                        Memory Stack
+                    </span>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: 'linear-gradient(to right, transparent, rgba(56,189,248,0.2), transparent)' }} />
             </div>
 
-            <div className="flex-1 overflow-auto p-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar relative">
                 <div className="flex flex-col">
                     {stack.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center" style={{ padding: '5rem 0', border: '1px dashed var(--border-color)', borderRadius: '8px', color: 'var(--text-muted)' }}>
-                            <Database size={32} style={{ opacity: 0.2, marginBottom: '0.75rem' }} />
-                            <span style={{ fontSize: '12px' }}>Stack is empty</span>
+                        <div className="flex flex-col items-center justify-center py-32 space-y-4" style={{ opacity: 0.2 }}>
+                            <Database size={40} className="text-[#9494b8]" />
+                            <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9494b8' }}>
+                                Empty Pipeline
+                            </div>
                         </div>
                     ) : (
                         <AnimatePresence initial={false}>
                             {stack.slice().reverse().map((item, index) => (
                                 <motion.div
                                     key={item.id}
-                                    initial={{ opacity: 0, x: 20, scale: 0.95 }}
-                                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    className="stack-item-card"
+                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.8, x: -20 }}
+                                    className="stack-item group"
                                 >
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '-6px',
-                                        right: '12px',
-                                        padding: '2px 6px',
-                                        background: 'var(--bg-primary)',
-                                        border: '1px solid var(--border-color)',
-                                        borderRadius: '4px',
-                                        fontSize: '9px',
-                                        fontFamily: 'var(--font-mono)',
-                                        color: 'var(--text-muted)'
-                                    }}>
-                                        0x{(stack.length - 1 - index).toString(16).padStart(2, '0')}
+                                    {/* Address Badge */}
+                                    <div
+                                        className="absolute"
+                                        style={{
+                                            top: '-8px',
+                                            right: '-4px',
+                                            padding: '2px 8px',
+                                            backgroundColor: '#0a0a0f',
+                                            border: '1px solid rgba(255,255,255,0.06)',
+                                            borderRadius: '6px',
+                                            fontSize: '9px',
+                                            fontFamily: 'var(--font-mono)',
+                                            color: '#52527a',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                                        }}
+                                    >
+                                        0x{(stack.length - 1 - index).toString(16).padStart(2, '0').toUpperCase()}
                                     </div>
 
-                                    <div className="flex items-center gap-2" style={{ marginBottom: '0.5rem' }}>
-                                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: item.type === 'hex' ? 'var(--accent-blue)' : 'var(--text-muted)' }} />
-                                        <span style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
+                                    {/* Type Indicator */}
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div
+                                            style={{
+                                                width: '4px',
+                                                height: '12px',
+                                                borderRadius: '10px',
+                                                backgroundColor: item.type === 'hex' ? '#38bdf8' : '#4ade80',
+                                                boxShadow: `0 0 8px ${item.type === 'hex' ? '#38bdf8' : '#4ade80'}`
+                                            }}
+                                        />
+                                        <span style={{ fontSize: '9px', color: '#52527a', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                                             {item.type}
                                         </span>
                                     </div>
 
-                                    <div className="mono" style={{ fontSize: '12px', wordBreak: 'break-all', color: 'var(--text-primary)' }}>
+                                    {/* Value Display */}
+                                    <div className="mono" style={{ fontSize: '13px', color: '#f4f4f5', lineHeight: '1.6', wordBreak: 'break-all', fontWeight: 500 }}>
                                         {item.value}
                                     </div>
                                 </motion.div>
@@ -62,6 +86,12 @@ export const StackInspector: React.FC<StackInspectorProps> = ({ stack }) => {
                         </AnimatePresence>
                     )}
                 </div>
+            </div>
+
+            {/* Footer Info */}
+            <div className="p-4 border-t" style={{ backgroundColor: '#080808', borderTopColor: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.4 }}>
+                <span className="mono" style={{ fontSize: '9px' }}>ADDR_RANGE: 0x00...0xFF</span>
+                <span className="mono" style={{ fontSize: '9px' }}>{stack.length} ITEMS</span>
             </div>
         </div>
     );
