@@ -158,8 +158,8 @@ export const VmPage: React.FC = () => {
                                     key={tab.id}
                                     onClick={() => setActiveTabId(tab.id)}
                                     className={`group flex items-center gap-3 px-4 py-2 rounded-t-lg transition-all duration-300 relative ${activeTabId === tab.id
-                                            ? 'bg-[#111] text-white border-x border-t border-white/10'
-                                            : 'text-[#666] hover:text-white hover:bg-white/5'
+                                        ? 'bg-[#111] text-white border-x border-t border-white/10'
+                                        : 'text-[#666] hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     {tab.type === 'script' ? <FileCode size={13} strokeWidth={2.5} /> : <TerminalIcon size={13} strokeWidth={2.5} />}

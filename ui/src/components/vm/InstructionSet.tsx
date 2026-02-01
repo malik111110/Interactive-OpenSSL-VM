@@ -70,6 +70,6 @@ export const InstructionSet: React.FC = () => {
                     All instructions are verified by the WASM runtime before execution.
                 </p>
             </div>
-        </div>
+        </div >
     );
 };
