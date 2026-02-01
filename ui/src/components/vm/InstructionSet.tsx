@@ -11,7 +11,14 @@ const INSTRUCTIONS: Instruction[] = [
     { op: 'PUSH', desc: 'Append data to memory pipeline', type: 'STACK' },
     { op: 'POP', desc: 'Evict last element from stack', type: 'STACK' },
     { op: 'HASH', desc: 'SHA-256 integrity calculation', type: 'CRYPTO' },
-    { op: 'AES_ENC', desc: 'AES-128-GCM cipher operation', type: 'CRYPTO' },
+    { op: 'MD5', desc: 'MD5 legacy hash calculation', type: 'CRYPTO' },
+    { op: 'SHA512', desc: 'SHA-512 strong hash calculation', type: 'CRYPTO' },
+    { op: 'AES_ENC', desc: 'AES-128-GCM encryption', type: 'CRYPTO' },
+    { op: 'AES_DEC', desc: 'AES-128-GCM decryption', type: 'CRYPTO' },
+    { op: 'RSA_GEN', desc: 'RSA 2048-bit keypair generation', type: 'CRYPTO' },
+    { op: 'RSA_ENC', desc: 'RSA public key encryption', type: 'CRYPTO' },
+    { op: 'RSA_DEC', desc: 'RSA private key decryption', type: 'CRYPTO' },
+    { op: 'CERT_GEN', desc: 'X.509 certificate generation', type: 'CRYPTO' },
     { op: 'HALT', desc: 'Terminate runtime execution', type: 'CTRL' },
 ];
 

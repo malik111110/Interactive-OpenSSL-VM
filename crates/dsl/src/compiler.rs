@@ -34,6 +34,18 @@ impl Compiler {
                         operands: Vec::new(),
                     });
                 }
+                "MD5" => {
+                    instructions.push(Instruction {
+                        opcode: Opcode::Md5,
+                        operands: Vec::new(),
+                    });
+                }
+                "SHA512" => {
+                    instructions.push(Instruction {
+                        opcode: Opcode::Sha512,
+                        operands: Vec::new(),
+                    });
+                }
                 "POP" => {
                     instructions.push(Instruction {
                         opcode: Opcode::Pop,
@@ -43,6 +55,36 @@ impl Compiler {
                 "AES_ENC" => {
                     instructions.push(Instruction {
                         opcode: Opcode::AesEnc,
+                        operands: Vec::new(),
+                    });
+                }
+                "AES_DEC" => {
+                    instructions.push(Instruction {
+                        opcode: Opcode::AesDec,
+                        operands: Vec::new(),
+                    });
+                }
+                "RSA_GEN" => {
+                    instructions.push(Instruction {
+                        opcode: Opcode::RsaGen,
+                        operands: Vec::new(),
+                    });
+                }
+                "RSA_ENC" => {
+                    instructions.push(Instruction {
+                        opcode: Opcode::RsaEnc,
+                        operands: Vec::new(),
+                    });
+                }
+                "RSA_DEC" => {
+                    instructions.push(Instruction {
+                        opcode: Opcode::RsaDec,
+                        operands: Vec::new(),
+                    });
+                }
+                "CERT_GEN" => {
+                    instructions.push(Instruction {
+                        opcode: Opcode::CertGen,
                         operands: Vec::new(),
                     });
                 }
