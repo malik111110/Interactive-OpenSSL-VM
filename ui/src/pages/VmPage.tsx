@@ -12,7 +12,7 @@ import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
-import { FileCode, Terminal as TerminalIcon, Plus } from 'lucide-react';
+import { Terminal as TerminalIcon, FileCode, Plus, X } from 'lucide-react';
 
 const DEFAULT_CODE = `// Interactive OpenSSL VM DSL
 // Perform cryptographic operations on the stack
@@ -151,29 +151,29 @@ export const VmPage: React.FC = () => {
                     <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
                     {/* Editor Header / Tabs */}
-                    <div className="flex items-center justify-between px-4 relative z-40" style={{ height: '48px', borderBottom: '1px solid var(--border-dim)', backgroundColor: 'var(--bg-sidebar)' }}>
-                        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[70%]">
+                    <div className="flex items-center justify-between px-6 relative z-40" style={{ height: '56px', borderBottom: '1px solid var(--border-dim)', backgroundColor: '#000' }}>
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[80%]">
                             {tabs.map(tab => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTabId(tab.id)}
-                                    className={`group flex items-center gap-2 px-3 py-1.5 rounded-t-lg transition-all duration-300 relative ${activeTabId === tab.id
-                                        ? 'bg-black text-[#38bdf8] border-x border-t border-white/10'
-                                        : 'text-[#52527a] hover:text-[#e4e4e7] hover:bg-white/5'
+                                    className={`group flex items-center gap-3 px-4 py-2 rounded-t-lg transition-all duration-300 relative ${activeTabId === tab.id
+                                            ? 'bg-[#111] text-white border-x border-t border-white/10'
+                                            : 'text-[#666] hover:text-white hover:bg-white/5'
                                         }`}
                                 >
-                                    {tab.type === 'script' ? <FileCode size={11} /> : <TerminalIcon size={11} />}
-                                    <span className="text-[9px] uppercase font-black tracking-widest whitespace-nowrap">{tab.name}</span>
+                                    {tab.type === 'script' ? <FileCode size={13} strokeWidth={2.5} /> : <TerminalIcon size={13} strokeWidth={2.5} />}
+                                    <span className="text-[10px] uppercase font-black tracking-widest whitespace-nowrap">{tab.name}</span>
                                     {tabs.length > 1 && (
                                         <div
                                             onClick={(e) => closeTab(tab.id, e)}
-                                            className="ml-1 opacity-0 group-hover:opacity-100 hover:text-red-400 p-0.5 rounded-sm transition-opacity"
+                                            className="ml-2 opacity-30 group-hover:opacity-100 hover:text-white p-0.5 rounded-md hover:bg-white/10 transition-all"
                                         >
-                                            <Plus size={9} style={{ transform: 'rotate(45deg)' }} />
+                                            <X size={10} strokeWidth={3} />
                                         </div>
                                     )}
                                     {activeTabId === tab.id && (
-                                        <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-black z-50"></div>
+                                        <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-[#111] z-50"></div>
                                     )}
                                 </button>
                             ))}
@@ -185,29 +185,33 @@ export const VmPage: React.FC = () => {
                                     e.stopPropagation();
                                     setIsMenuOpen(!isMenuOpen);
                                 }}
-                                className="flex items-center gap-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] bg-[#1a1a1a] border border-white/10 rounded-md text-[#38bdf8] hover:border-[#38bdf8]/50 transition-all hover:bg-[#38bdf8]/5"
+                                className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] bg-white text-black rounded-md hover:bg-white/90 transition-all active:scale-95"
                             >
-                                <Plus size={12} className={`transition-transform duration-300 ${isMenuOpen ? 'rotate-45' : ''}`} />
+                                <Plus size={12} strokeWidth={4} className={`transition-transform duration-300 ${isMenuOpen ? 'rotate-45' : ''}`} />
                                 New
                             </button>
 
                             {isMenuOpen && (
                                 <div
-                                    className="absolute right-0 mt-2 w-40 bg-[#0d0d0d] border border-white/10 rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.6)] p-1 z-50 animate-in fade-in slide-in-from-top-1 duration-200"
+                                    className="absolute right-0 mt-2 w-40 bg-black border border-white/10 rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.8)] p-1 z-50 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <button
                                         onClick={() => createNewTab('script')}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[9px] font-bold text-[#a1a1aa] hover:bg-[#38bdf8]/10 hover:text-[#38bdf8] rounded-md transition-all text-left uppercase tracking-widest"
+                                        className="w-full flex items-center gap-3 px-3 py-2 text-[10px] font-bold text-white/70 hover:bg-white/10 hover:text-white rounded-md transition-all text-left uppercase tracking-widest"
                                     >
-                                        <FileCode size={12} />
+                                        <div className="w-6 h-6 flex items-center justify-center">
+                                            <FileCode size={13} strokeWidth={2.5} />
+                                        </div>
                                         File
                                     </button>
                                     <button
                                         onClick={() => createNewTab('terminal')}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[9px] font-bold text-[#a1a1aa] hover:bg-[#4ade80]/10 hover:text-[#4ade80] rounded-md transition-all text-left uppercase tracking-widest"
+                                        className="w-full flex items-center gap-3 px-3 py-2 text-[10px] font-bold text-white/70 hover:bg-white/10 hover:text-white rounded-md transition-all text-left uppercase tracking-widest"
                                     >
-                                        <TerminalIcon size={12} />
+                                        <div className="w-6 h-6 flex items-center justify-center">
+                                            <TerminalIcon size={13} strokeWidth={2.5} />
+                                        </div>
                                         CLI
                                     </button>
                                 </div>
