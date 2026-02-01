@@ -7,8 +7,14 @@ pub enum Opcode {
     Mul,
     Div,
     Hash,
+    Md5,
+    Sha512,
     AesEnc,
     AesDec,
+    RsaGen,
+    RsaEnc,
+    RsaDec,
+    CertGen,
     Halt,
 }
 

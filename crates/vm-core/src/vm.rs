@@ -51,17 +51,76 @@ impl Vm {
                 let hashed = crypto::hash::sha256(&data);
                 self.stack.push(hashed);
             }
+            Opcode::Md5 => {
+                let data = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                let hashed = crypto::hash::md5(&data);
+                self.stack.push(hashed);
+            }
+            Opcode::Sha512 => {
+                let data = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                let hashed = crypto::hash::sha512(&data);
+                self.stack.push(hashed);
+            }
             Opcode::AesEnc => {
                 let key = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                let data = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                let mut data = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                
+                // Decode hex if input is 0x...
+                if data.starts_with(b"0x") {
+                    if let Ok(hex_str) = std::str::from_utf8(&data[2..]) {
+                        if let Ok(decoded) = hex::decode(hex_str) {
+                            data = decoded;
+                        }
+                    }
+                }
+
                 let encrypted = crypto::aes::encrypt(&data, &key);
-                self.stack.push(format!("0x{}", hex::encode(encrypted)).into_bytes());
+                self.stack.push(encrypted);
+            }
+            Opcode::AesDec => {
+                let key = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                let mut data = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+
+                // Decode hex if input is 0x...
+                if data.starts_with(b"0x") {
+                    if let Ok(hex_str) = std::str::from_utf8(&data[2..]) {
+                        if let Ok(decoded) = hex::decode(hex_str) {
+                            data = decoded;
+                        }
+                    }
+                }
+
+                let decrypted = crypto::aes::decrypt(&data, &key);
+                self.stack.push(decrypted);
+            }
+            Opcode::RsaGen => {
+                let (priv_key, pub_key) = crypto::rsa::generate_key();
+                self.stack.push(priv_key);
+                self.stack.push(pub_key);
+            }
+            Opcode::RsaEnc => {
+                let key = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                let data = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                let encrypted = crypto::rsa::encrypt(&data, &key);
+                self.stack.push(encrypted);
+            }
+            Opcode::RsaDec => {
+                let key = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                let data = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                let decrypted = crypto::rsa::decrypt(&data, &key);
+                self.stack.push(decrypted);
+            }
+            Opcode::CertGen => {
+                let subject_bytes = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                let subject = String::from_utf8_lossy(&subject_bytes);
+                let cert = crypto::rsa::generate_cert(&subject);
+                self.stack.push(cert.into_bytes());
             }
             Opcode::Halt => {
                 self.halted = true;
             }
             _ => {
-                // TODO: Implement other opcodes
+                // Handle remaining opcodes if any
             }
         }
 

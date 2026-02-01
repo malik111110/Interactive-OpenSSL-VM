@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useVm } from '../hooks/useVm';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
@@ -12,7 +12,7 @@ import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
-import { FileCode, Sparkles } from 'lucide-react';
+import { FileCode, Terminal as TerminalIcon, Plus } from 'lucide-react';
 
 const DEFAULT_CODE = `// Interactive OpenSSL VM DSL
 // Perform cryptographic operations on the stack
@@ -22,8 +22,20 @@ PUSH "mykey"
 AES_ENC
 HALT`;
 
+interface ViewTab {
+    id: string;
+    name: string;
+    type: 'script' | 'terminal';
+    content: string;
+}
+
 export const VmPage: React.FC = () => {
-    const [code, setCode] = useState(DEFAULT_CODE);
+    const [tabs, setTabs] = useState<ViewTab[]>([
+        { id: 'main', name: 'main_script.osh', type: 'script', content: DEFAULT_CODE }
+    ]);
+    const [activeTabId, setActiveTabId] = useState('main');
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     const {
         stack,
         logs,
@@ -36,8 +48,52 @@ export const VmPage: React.FC = () => {
         addLog
     } = useVm();
 
+    useEffect(() => {
+        const handleClickOutside = () => {
+            if (isMenuOpen) {
+                setIsMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isMenuOpen]);
+
+    const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
+
+    const updateActiveTabContent = (newContent: string) => {
+        setTabs(prev => prev.map(t => t.id === activeTabId ? { ...t, content: newContent } : t));
+    };
+
+    const closeTab = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (tabs.length === 1) return; // Don't close the last tab
+        const newTabs = tabs.filter(t => t.id !== id);
+        setTabs(newTabs);
+        if (activeTabId === id) {
+            setActiveTabId(newTabs[newTabs.length - 1].id);
+        }
+    };
+
+    const createNewTab = (type: 'script' | 'terminal') => {
+        const id = Math.random().toString(36).substring(7);
+        const count = tabs.filter(t => t.type === type).length;
+        const name = type === 'script' ? `script_${count + 1}.osh` : `cli_bash_${count + 1}`;
+        const newTab: ViewTab = {
+            id,
+            name,
+            type,
+            content: type === 'script' ? `// New OpenSSL Script\n// Start typing your instructions here\n\nPUSH "secret data"\nHASH\nHALT` : ''
+        };
+        setTabs(prev => [...prev, newTab]);
+        setActiveTabId(id);
+        setIsMenuOpen(false);
+    };
+
     const handleCommand = (command: string) => {
         const cmd = command.trim();
+        if (!cmd) return;
+
+        addLog(`➜ ${cmd}`);
 
         if (OpenSslService.isHelp(cmd)) {
             addLog(OpenSslService.getHelpText());
@@ -45,6 +101,7 @@ export const VmPage: React.FC = () => {
         }
 
         if (cmd === 'clear') {
+            addLog("Terminal cleared.");
             return;
         }
 
@@ -55,19 +112,25 @@ export const VmPage: React.FC = () => {
 
         const dsl = OpenSslService.translateToDsl(cmd);
         if (dsl) {
-            execute(dsl);
+            if (dsl.startsWith('MANUAL:')) {
+                const page = dsl.split(':')[1].trim();
+                const content = OpenSslService.MAN_PAGES[page] || `No manual entry for ${page}`;
+                addLog(content);
+            } else {
+                execute(dsl);
+            }
         } else {
             addLog(`Error: Command initialization failed. Unknown directive: '${cmd}'`);
         }
     };
 
     return (
-        <div className="vm-app flex flex-col h-screen w-full select-none">
+        <div className="vm-app flex flex-col h-screen w-full select-none bg-black">
             <Header
                 status={status}
                 fuel={fuel}
                 pc={pc}
-                onRun={() => execute(code)}
+                onRun={() => activeTab.type === 'script' && execute(activeTab.content)}
                 onReset={reset}
             />
 
@@ -87,54 +150,118 @@ export const VmPage: React.FC = () => {
                     {/* Subtle grid background */}
                     <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
 
-                    {/* Editor Header */}
-                    <div className="flex items-center justify-between px-6 relative z-10" style={{ height: '48px', borderBottom: '1px solid var(--border-dim)', backgroundColor: 'var(--bg-sidebar)' }}>
-                        <div className="flex items-center gap-3">
-                            <FileCode size={14} className="text-[#38bdf8]" />
-                            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-[#52527a]">main_script.osh</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-[9px] font-mono text-[#333] font-black uppercase tracking-widest">
-                            <span>Encoding: UTF-8</span>
-                            <span className="text-[#38bdf8]/40 flex items-center gap-1">
-                                <Sparkles size={10} />
-                                Cloud_Sync_Enabled
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Code Editor Container */}
-                    <div className="flex-1 relative overflow-auto custom-scrollbar relative z-10" style={{ backgroundColor: 'var(--bg-page)' }}>
-                        <div className="absolute top-0 left-0 h-full flex flex-col pt-6 items-center pointer-events-none select-none" style={{ width: '48px', backgroundColor: '#030303', borderRight: '1px solid var(--border-dim)', color: '#222', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
-                            {code.split('\n').map((_, i) => (
-                                <div key={i} style={{ height: '24px' }}>{i + 1}</div>
+                    {/* Editor Header / Tabs */}
+                    <div className="flex items-center justify-between px-4 relative z-40" style={{ height: '48px', borderBottom: '1px solid var(--border-dim)', backgroundColor: 'var(--bg-sidebar)' }}>
+                        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[70%]">
+                            {tabs.map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTabId(tab.id)}
+                                    className={`group flex items-center gap-2 px-3 py-1.5 rounded-t-lg transition-all duration-300 relative ${activeTabId === tab.id
+                                        ? 'bg-black text-[#38bdf8] border-x border-t border-white/10'
+                                        : 'text-[#52527a] hover:text-[#e4e4e7] hover:bg-white/5'
+                                        }`}
+                                >
+                                    {tab.type === 'script' ? <FileCode size={11} /> : <TerminalIcon size={11} />}
+                                    <span className="text-[9px] uppercase font-black tracking-widest whitespace-nowrap">{tab.name}</span>
+                                    {tabs.length > 1 && (
+                                        <div
+                                            onClick={(e) => closeTab(tab.id, e)}
+                                            className="ml-1 opacity-0 group-hover:opacity-100 hover:text-red-400 p-0.5 rounded-sm transition-opacity"
+                                        >
+                                            <Plus size={9} style={{ transform: 'rotate(45deg)' }} />
+                                        </div>
+                                    )}
+                                    {activeTabId === tab.id && (
+                                        <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-black z-50"></div>
+                                    )}
+                                </button>
                             ))}
                         </div>
-                        <Editor
-                            value={code}
-                            onValueChange={setCode}
-                            highlight={code => highlight(code, languages.javascript)}
-                            padding={24}
-                            style={{
-                                fontFamily: 'var(--font-mono)',
-                                fontSize: 14,
-                                color: '#e4e4e7',
-                                marginLeft: 48,
-                                minHeight: '100%',
-                                lineHeight: '24px',
-                                letterSpacing: '-0.01em'
-                            }}
-                            textareaClassName="outline-none"
-                        />
+
+                        <div className="relative">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsMenuOpen(!isMenuOpen);
+                                }}
+                                className="flex items-center gap-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] bg-[#1a1a1a] border border-white/10 rounded-md text-[#38bdf8] hover:border-[#38bdf8]/50 transition-all hover:bg-[#38bdf8]/5"
+                            >
+                                <Plus size={12} className={`transition-transform duration-300 ${isMenuOpen ? 'rotate-45' : ''}`} />
+                                New
+                            </button>
+
+                            {isMenuOpen && (
+                                <div
+                                    className="absolute right-0 mt-2 w-40 bg-[#0d0d0d] border border-white/10 rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.6)] p-1 z-50 animate-in fade-in slide-in-from-top-1 duration-200"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <button
+                                        onClick={() => createNewTab('script')}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[9px] font-bold text-[#a1a1aa] hover:bg-[#38bdf8]/10 hover:text-[#38bdf8] rounded-md transition-all text-left uppercase tracking-widest"
+                                    >
+                                        <FileCode size={12} />
+                                        File
+                                    </button>
+                                    <button
+                                        onClick={() => createNewTab('terminal')}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[9px] font-bold text-[#a1a1aa] hover:bg-[#4ade80]/10 hover:text-[#4ade80] rounded-md transition-all text-left uppercase tracking-widest"
+                                    >
+                                        <TerminalIcon size={12} />
+                                        CLI
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Interactive Console UI */}
-                    <div style={{ height: '300px', borderTop: '1px solid var(--border-dim)' }}>
-                        <Terminal
-                            logs={logs}
-                            status={status}
-                            onCommand={handleCommand}
-                        />
+                    {/* Content Area */}
+                    <div className="flex-1 flex flex-col overflow-hidden relative z-10">
+                        {activeTab.type === 'script' ? (
+                            <div className="flex-1 relative overflow-auto custom-scrollbar" style={{ backgroundColor: 'var(--bg-page)' }}>
+                                <div className="absolute top-0 left-0 h-full flex flex-col pt-6 items-center pointer-events-none select-none" style={{ width: '40px', backgroundColor: '#030303', borderRight: '1px solid var(--border-dim)', color: '#222', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
+                                    {activeTab.content.split('\n').map((_, i) => (
+                                        <div key={i} style={{ height: '24px' }}>{i + 1}</div>
+                                    ))}
+                                </div>
+                                <Editor
+                                    value={activeTab.content}
+                                    onValueChange={updateActiveTabContent}
+                                    highlight={code => highlight(code, languages.javascript)}
+                                    padding={24}
+                                    style={{
+                                        fontFamily: 'var(--font-mono)',
+                                        fontSize: 13,
+                                        color: '#e4e4e7',
+                                        marginLeft: 40,
+                                        minHeight: '100%',
+                                        lineHeight: '24px',
+                                        letterSpacing: '-0.01em'
+                                    }}
+                                    textareaClassName="outline-none"
+                                />
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col">
+                                <Terminal
+                                    logs={logs}
+                                    status={status}
+                                    onCommand={handleCommand}
+                                />
+                            </div>
+                        )}
                     </div>
+
+                    {/* Bottom Console (Only visible if not in full-screen terminal mode) */}
+                    {activeTab.type === 'script' && (
+                        <div style={{ height: '220px', borderTop: '1px solid var(--border-dim)', flexShrink: 0 }}>
+                            <Terminal
+                                logs={logs}
+                                status={status}
+                                onCommand={handleCommand}
+                            />
+                        </div>
+                    )}
                 </section>
 
                 {/* State/Memory inspector */}
@@ -150,3 +277,4 @@ export const VmPage: React.FC = () => {
         </div>
     );
 };
+

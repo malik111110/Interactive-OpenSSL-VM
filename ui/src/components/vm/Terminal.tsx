@@ -81,29 +81,38 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
             {/* Logs Area */}
             <div
                 ref={scrollRef}
-                className="flex-1 overflow-y-auto p-5 space-y-2 custom-scrollbar relative z-20"
-                style={{ fontFamily: 'var(--font-mono)', fontSize: '13px' }}
+                className="flex-1 overflow-y-auto p-5 space-y-2 custom-scrollbar relative z-40"
+                style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', cursor: 'text' }}
                 onClick={() => inputRef.current?.focus()}
             >
-                {logs.map((log, i) => (
-                    <div key={i} className="flex gap-3 leading-relaxed" style={{ opacity: 0.9 }}>
-                        <span style={{ color: '#38bdf8', userSelect: 'none', fontWeight: 700 }}>~</span>
-                        <span style={{ color: log.includes('Error') ? '#f87171' : '#e2e8f0' }}>
-                            {log}
-                        </span>
-                    </div>
-                ))}
+                {logs.map((log, i) => {
+                    const isCommand = log.startsWith('➜');
+                    return (
+                        <div key={i} className="flex gap-3 leading-relaxed" style={{ opacity: isCommand ? 0.6 : 0.9 }}>
+                            {!isCommand && <span style={{ color: '#38bdf8', userSelect: 'none', fontWeight: 700 }}>~</span>}
+                            <span style={{
+                                color: isCommand ? '#4ade80' : (log.includes('Error') ? '#f87171' : '#e2e8f0'),
+                                fontWeight: isCommand ? 700 : 400
+                            }}>
+                                {log}
+                            </span>
+                        </div>
+                    );
+                })}
 
                 {/* Active Command Line */}
-                <form onSubmit={handleSubmit} className="flex gap-3 items-center pt-2">
+                <form onSubmit={handleSubmit} className="flex gap-3 items-center pt-2 relative z-50">
                     <span style={{ color: '#4ade80', fontWeight: 900, userSelect: 'none' }}>➜</span>
-                    <div className="relative flex-1">
+                    <div className="relative flex-1 flex items-center">
                         <input
                             ref={inputRef}
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
+                            autoFocus
+                            autoComplete="off"
+                            spellCheck="false"
                             style={{
                                 width: '100%',
                                 backgroundColor: 'transparent',
@@ -111,19 +120,23 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
                                 outline: 'none',
                                 color: '#ffffff',
                                 fontFamily: 'var(--font-mono)',
-                                padding: 0
+                                padding: 0,
+                                fontSize: '13px',
+                                caretColor: 'transparent'
                             }}
-                            spellCheck={false}
-                            autoComplete="off"
-                            placeholder="_"
+                            placeholder=""
                         />
-                        {input === '' && <span className="terminal-cursor" />}
+                        <span className="terminal-cursor" style={{
+                            position: 'absolute',
+                            left: `${input.length * 8.1}px`, // Adjusted for JetBrains Mono
+                            display: 'inline-block'
+                        }} />
                     </div>
                 </form>
             </div>
 
-            {/* CRT Vignette shadow */}
-            <div className="absolute inset-0 pointer-events-none z-30" style={{ boxShadow: 'inset 0 0 60px rgba(0,0,0,0.5)' }} />
+            {/* CRT Vignette shadow - backdrop */}
+            <div className="absolute inset-0 pointer-events-none z-30" style={{ boxShadow: 'inset 0 0 100px rgba(0,0,0,0.7)' }} />
         </div>
     );
 };
