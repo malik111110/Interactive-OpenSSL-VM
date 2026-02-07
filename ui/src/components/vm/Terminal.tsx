@@ -10,7 +10,7 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
     const [input, setInput] = useState('');
     const [history, setHistory] = useState<string[]>([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
-    const scrollRef = useRef<HTMLDivElement>(null);
+    const scrollRef = useRef<HTMLButtonElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -19,7 +19,7 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
         }
     }, [logs]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!input.trim()) return;
 
@@ -51,12 +51,12 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
     };
 
     return (
-        <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: '#030303' }}>
+        <div className="flex flex-col h-full relative overflow-hidden" style={{ backgroundColor: 'var(--bg-panel)' }}>
             {/* Scanline Effect */}
             <div className="scanline"></div>
 
             {/* Terminal Header */}
-            <div className="flex items-center justify-between px-4 py-2 select-none" style={{ backgroundColor: '#080808', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+            <div className="flex items-center justify-between px-4 py-2 select-none" style={{ backgroundColor: 'var(--bg-sidebar)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                 <div className="flex items-center gap-3">
                     <div
                         className="transition-all duration-300"
@@ -64,11 +64,11 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
                             width: '8px',
                             height: '8px',
                             borderRadius: '50%',
-                            backgroundColor: status === 'running' ? '#4ade80' : '#1e1e1e',
-                            boxShadow: status === 'running' ? '0 0 10px #4ade80' : 'none'
+                            backgroundColor: status === 'running' ? 'var(--accent-secondary)' : '#1e1e1e',
+                            boxShadow: status === 'running' ? '0 0 10px rgba(163, 230, 53, 0.6)' : 'none'
                         }}
                     />
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#52527a', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
                         Virtual Console v2.0
                     </span>
                 </div>
@@ -79,19 +79,30 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
             </div>
 
             {/* Logs Area */}
-            <div
+            <button
                 ref={scrollRef}
-                className="flex-1 overflow-y-auto p-5 space-y-2 custom-scrollbar relative z-40"
-                style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', cursor: 'text' }}
+                type="button"
+                className="flex-1 overflow-y-auto p-5 space-y-2 custom-scrollbar relative z-40 text-left"
+                style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', cursor: 'text', background: 'transparent', border: 'none' }}
                 onClick={() => inputRef.current?.focus()}
             >
                 {logs.map((log, i) => {
                     const isCommand = log.startsWith('➜');
+                    const isError = log.includes('Error');
+                    const key = `${log}-${i}`;
+
+                    let color = 'var(--text-bright)';
+                    if (isCommand) {
+                        color = 'var(--accent-secondary)';
+                    } else if (isError) {
+                        color = 'var(--accent-danger)';
+                    }
+
                     return (
-                        <div key={i} className="flex gap-3 leading-relaxed" style={{ opacity: isCommand ? 0.6 : 0.9 }}>
-                            {!isCommand && <span style={{ color: '#38bdf8', userSelect: 'none', fontWeight: 700 }}>~</span>}
+                        <div key={key} className="flex gap-3 leading-relaxed" style={{ opacity: isCommand ? 0.6 : 0.9 }}>
+                            {!isCommand && <span style={{ color: 'var(--accent-primary)', userSelect: 'none', fontWeight: 700 }}>~</span>}
                             <span style={{
-                                color: isCommand ? '#4ade80' : (log.includes('Error') ? '#f87171' : '#e2e8f0'),
+                                color,
                                 fontWeight: isCommand ? 700 : 400
                             }}>
                                 {log}
@@ -102,7 +113,7 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
 
                 {/* Active Command Line */}
                 <form onSubmit={handleSubmit} className="flex gap-3 items-center pt-2 relative z-50">
-                    <span style={{ color: '#4ade80', fontWeight: 900, userSelect: 'none' }}>➜</span>
+                    <span style={{ color: 'var(--accent-secondary)', fontWeight: 900, userSelect: 'none' }}>➜</span>
                     <div className="relative flex-1 flex items-center">
                         <input
                             ref={inputRef}
@@ -118,7 +129,7 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
                                 backgroundColor: 'transparent',
                                 border: 'none',
                                 outline: 'none',
-                                color: '#ffffff',
+                                color: 'var(--text-pure)',
                                 fontFamily: 'var(--font-mono)',
                                 padding: 0,
                                 fontSize: '13px',
@@ -128,12 +139,12 @@ export const Terminal: React.FC<TerminalProps> = ({ logs, onCommand, status }) =
                         />
                         <span className="terminal-cursor" style={{
                             position: 'absolute',
-                            left: `${input.length * 8.1}px`, // Adjusted for JetBrains Mono
+                            left: `${input.length}ch`,
                             display: 'inline-block'
                         }} />
                     </div>
                 </form>
-            </div>
+            </button>
 
             {/* CRT Vignette shadow - backdrop */}
             <div className="absolute inset-0 pointer-events-none z-30" style={{ boxShadow: 'inset 0 0 100px rgba(0,0,0,0.7)' }} />

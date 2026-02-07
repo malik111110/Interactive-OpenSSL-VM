@@ -12,19 +12,22 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ status, fuel, pc, onRun, onReset }) => {
     return (
-        <header className="flex items-center justify-between px-8 relative z-50" style={{ height: '72px', borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-sidebar)' }}>
+        <header className="header-bar flex items-center justify-between flex-wrap relative z-50" style={{ borderBottom: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-sidebar)' }}>
             {/* Decorative backdrop glow */}
             <div className="absolute inset-0 bg-gradient-to-b from-[rgba(56,189,248,0.03)] to-transparent pointer-events-none" />
 
-            <div className="flex items-center gap-6 relative z-10">
+            <div className="header-left flex items-center gap-6 relative z-10">
                 <div className="flex items-center gap-4 group">
-                    <div className="flex items-center justify-center p-2.5 bg-[#0a0a0f] border border-[rgba(255,255,255,0.05)] rounded-xl text-[#38bdf8] shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+                    <div
+                        className="flex items-center justify-center p-2.5 bg-[#0a0a0f] border border-[rgba(255,255,255,0.05)] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.5)]"
+                        style={{ color: 'var(--accent-primary)' }}
+                    >
                         <Shield size={22} className="glow-text" />
                     </div>
                     <div>
                         <h1 className="flex items-center gap-2" style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.3px' }}>
                             OPENSSL VM
-                            <span style={{ fontSize: '10px', backgroundColor: 'rgba(56,189,248,0.1)', color: '#38bdf8', padding: '2px 8px', borderRadius: '100px', fontFamily: 'var(--font-mono)', fontWeight: 700, border: '1px solid rgba(56,189,248,0.2)' }}>
+                            <span style={{ fontSize: '10px', backgroundColor: 'rgba(34,211,238,0.1)', color: 'var(--accent-primary)', padding: '2px 8px', borderRadius: '100px', fontFamily: 'var(--font-mono)', fontWeight: 700, border: '1px solid rgba(34,211,238,0.3)' }}>
                                 PRO-ENV
                             </span>
                         </h1>
@@ -35,20 +38,20 @@ export const Header: React.FC<HeaderProps> = ({ status, fuel, pc, onRun, onReset
                 </div>
             </div>
 
-            <div className="flex items-center gap-8 relative z-10">
-                <div className="flex items-center gap-4">
+            <div className="header-right flex items-center gap-8 relative z-10">
+                <div className="header-metrics flex items-center gap-4">
                     {/* Status Metrics */}
                     <div className="flex flex-col items-end gap-1">
                         <span style={{ fontSize: '8px', fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Energy Reserve</span>
                         <div className="flex items-center gap-3 px-4 py-1.5 bg-[#0a0a0a] border border-[rgba(255,255,255,0.05)] rounded-lg">
-                            <Zap size={13} className={fuel < 20 ? 'text-[#f87171] animate-pulse' : 'text-[#38bdf8]'} />
+                            <Zap size={13} style={{ color: fuel < 20 ? 'var(--accent-danger)' : 'var(--accent-primary)' }} />
                             <div style={{ width: '96px', height: '4px', backgroundColor: '#1a1a1a', borderRadius: '4px', overflow: 'hidden' }}>
                                 <div
                                     className="h-full transition-all duration-500"
                                     style={{
                                         width: `${fuel}%`,
-                                        backgroundColor: fuel < 20 ? '#f87171' : '#38bdf8',
-                                        boxShadow: `0 0 10px ${fuel < 20 ? '#f87171' : '#38bdf8'}`,
+                                        backgroundColor: fuel < 20 ? 'var(--accent-danger)' : 'var(--accent-primary)',
+                                        boxShadow: `0 0 10px ${fuel < 20 ? 'var(--accent-danger)' : 'var(--accent-primary)'}`,
                                         borderRadius: '4px'
                                     }}
                                 />
@@ -68,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({ status, fuel, pc, onRun, onReset
 
                 <div style={{ width: '1px', height: '32px', backgroundColor: 'rgba(255,255,255,0.05)', margin: '0 8px' }} />
 
-                <div className="flex items-center gap-3">
+                <div className="header-actions flex items-center gap-3">
                     <button
                         onClick={onRun}
                         disabled={status === 'running'}

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useVm } from '../hooks/useVm';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
@@ -12,7 +13,7 @@ import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
-import { FileCode, Terminal as TerminalIcon, Plus } from 'lucide-react';
+import { Terminal as TerminalIcon, FileCode, Plus, X } from 'lucide-react';
 
 const DEFAULT_CODE = `// Interactive OpenSSL VM DSL
 // Perform cryptographic operations on the stack
@@ -35,6 +36,9 @@ export const VmPage: React.FC = () => {
     ]);
     const [activeTabId, setActiveTabId] = useState('main');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+    const menuRef = useRef<HTMLDivElement>(null);
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
 
     const {
         stack,
@@ -49,8 +53,12 @@ export const VmPage: React.FC = () => {
     } = useVm();
 
     useEffect(() => {
-        const handleClickOutside = () => {
-            if (isMenuOpen) {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (!isMenuOpen) return;
+            const target = event.target as Node;
+            const isInsideMenu = menuRef.current?.contains(target);
+            const isInsideButton = menuButtonRef.current?.contains(target);
+            if (!isInsideMenu && !isInsideButton) {
                 setIsMenuOpen(false);
             }
         };
@@ -70,7 +78,10 @@ export const VmPage: React.FC = () => {
         const newTabs = tabs.filter(t => t.id !== id);
         setTabs(newTabs);
         if (activeTabId === id) {
-            setActiveTabId(newTabs[newTabs.length - 1].id);
+            const last = newTabs.at(-1);
+            if (last) {
+                setActiveTabId(last.id);
+            }
         }
     };
 
@@ -125,7 +136,9 @@ export const VmPage: React.FC = () => {
     };
 
     return (
-        <div className="vm-app flex flex-col h-screen w-full select-none bg-black">
+        <div className="vm-app flex flex-col h-screen w-full select-none bg-black relative overflow-hidden">
+            <div className="page-aurora" />
+            <div className="page-noise" />
             <Header
                 status={status}
                 fuel={fuel}
@@ -134,10 +147,10 @@ export const VmPage: React.FC = () => {
                 onReset={reset}
             />
 
-            <main className="flex-1 flex overflow-hidden">
+            <main className="app-shell flex-1 flex overflow-hidden">
                 {/* Navigation / Instruction Sidebar */}
                 <aside
-                    className="flex flex-col overflow-y-auto custom-scrollbar p-8 space-y-10 flex-shrink-0"
+                    className="sidebar-left flex flex-col overflow-y-auto custom-scrollbar p-8 space-y-10 flex-shrink-0"
                     style={{ width: '320px', backgroundColor: 'var(--bg-sidebar)', borderRight: '1px solid var(--border-dim)' }}
                 >
                     <LearningCenter />
@@ -146,34 +159,36 @@ export const VmPage: React.FC = () => {
                 </aside>
 
                 {/* Central Workspace */}
-                <section className="flex-1 flex flex-col overflow-hidden relative" style={{ backgroundColor: 'var(--bg-page)' }}>
+                <section className="workspace flex-1 flex flex-col overflow-hidden relative" style={{ backgroundColor: 'var(--bg-page)' }}>
                     {/* Subtle grid background */}
-                    <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+                    <div className="page-grid" />
 
                     {/* Editor Header / Tabs */}
-                    <div className="flex items-center justify-between px-4 relative z-40" style={{ height: '48px', borderBottom: '1px solid var(--border-dim)', backgroundColor: 'var(--bg-sidebar)' }}>
-                        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[70%]">
+                    <div className="tabs-bar flex items-center justify-between px-6 relative z-40" style={{ height: '56px', borderBottom: '1px solid var(--border-dim)', backgroundColor: '#000' }}>
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[80%]">
                             {tabs.map(tab => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTabId(tab.id)}
-                                    className={`group flex items-center gap-2 px-3 py-1.5 rounded-t-lg transition-all duration-300 relative ${activeTabId === tab.id
-                                        ? 'bg-black text-[#38bdf8] border-x border-t border-white/10'
-                                        : 'text-[#52527a] hover:text-[#e4e4e7] hover:bg-white/5'
+                                    className={`tab-button group flex items-center gap-3 px-4 py-2 rounded-t-lg transition-all duration-300 relative ${activeTabId === tab.id
+                                        ? 'is-active bg-[#111] text-white border-x border-t border-white/10'
+                                        : 'text-[#666] hover:text-white hover:bg-white/5'
                                         }`}
                                 >
-                                    {tab.type === 'script' ? <FileCode size={11} /> : <TerminalIcon size={11} />}
-                                    <span className="text-[9px] uppercase font-black tracking-widest whitespace-nowrap">{tab.name}</span>
+                                    {tab.type === 'script' ? <FileCode size={13} strokeWidth={2.5} /> : <TerminalIcon size={13} strokeWidth={2.5} />}
+                                    <span className="text-[10px] uppercase font-black tracking-widest whitespace-nowrap">{tab.name}</span>
                                     {tabs.length > 1 && (
-                                        <div
+                                        <button
+                                            type="button"
                                             onClick={(e) => closeTab(tab.id, e)}
-                                            className="ml-1 opacity-0 group-hover:opacity-100 hover:text-red-400 p-0.5 rounded-sm transition-opacity"
+                                            className="ml-2 opacity-30 group-hover:opacity-100 hover:text-white p-0.5 rounded-md hover:bg-white/10 transition-all"
+                                            aria-label={`Close ${tab.name}`}
                                         >
-                                            <Plus size={9} style={{ transform: 'rotate(45deg)' }} />
-                                        </div>
+                                            <X size={10} strokeWidth={3} />
+                                        </button>
                                     )}
                                     {activeTabId === tab.id && (
-                                        <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-black z-50"></div>
+                                        <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-[#111] z-50"></div>
                                     )}
                                 </button>
                             ))}
@@ -181,36 +196,51 @@ export const VmPage: React.FC = () => {
 
                         <div className="relative">
                             <button
+                                ref={menuButtonRef}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    setIsMenuOpen(!isMenuOpen);
+                                    const nextOpen = !isMenuOpen;
+                                    setIsMenuOpen(nextOpen);
+                                    if (nextOpen && menuButtonRef.current) {
+                                        const rect = menuButtonRef.current.getBoundingClientRect();
+                                        const menuWidth = 180;
+                                        const left = Math.max(16, rect.right - menuWidth);
+                                        const top = rect.bottom + 10;
+                                        setMenuPosition({ top, left });
+                                    }
                                 }}
-                                className="flex items-center gap-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] bg-[#1a1a1a] border border-white/10 rounded-md text-[#38bdf8] hover:border-[#38bdf8]/50 transition-all hover:bg-[#38bdf8]/5"
+                                className="tab-new flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] rounded-md transition-all active:scale-95"
                             >
-                                <Plus size={12} className={`transition-transform duration-300 ${isMenuOpen ? 'rotate-45' : ''}`} />
+                                <Plus size={12} strokeWidth={4} className={`transition-transform duration-300 ${isMenuOpen ? 'rotate-45' : ''}`} />
                                 New
                             </button>
 
-                            {isMenuOpen && (
+                            {isMenuOpen && createPortal(
                                 <div
-                                    className="absolute right-0 mt-2 w-40 bg-[#0d0d0d] border border-white/10 rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.6)] p-1 z-50 animate-in fade-in slide-in-from-top-1 duration-200"
-                                    onClick={(e) => e.stopPropagation()}
+                                    ref={menuRef}
+                                    className="tab-menu menu-panel"
+                                    style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
                                 >
                                     <button
                                         onClick={() => createNewTab('script')}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[9px] font-bold text-[#a1a1aa] hover:bg-[#38bdf8]/10 hover:text-[#38bdf8] rounded-md transition-all text-left uppercase tracking-widest"
+                                        className="menu-item"
                                     >
-                                        <FileCode size={12} />
+                                        <div className="menu-item__icon">
+                                            <FileCode size={13} strokeWidth={2.5} />
+                                        </div>
                                         File
                                     </button>
                                     <button
                                         onClick={() => createNewTab('terminal')}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[9px] font-bold text-[#a1a1aa] hover:bg-[#4ade80]/10 hover:text-[#4ade80] rounded-md transition-all text-left uppercase tracking-widest"
+                                        className="menu-item"
                                     >
-                                        <TerminalIcon size={12} />
+                                        <div className="menu-item__icon">
+                                            <TerminalIcon size={13} strokeWidth={2.5} />
+                                        </div>
                                         CLI
                                     </button>
-                                </div>
+                                </div>,
+                                document.body
                             )}
                         </div>
                     </div>
@@ -220,8 +250,8 @@ export const VmPage: React.FC = () => {
                         {activeTab.type === 'script' ? (
                             <div className="flex-1 relative overflow-auto custom-scrollbar" style={{ backgroundColor: 'var(--bg-page)' }}>
                                 <div className="absolute top-0 left-0 h-full flex flex-col pt-6 items-center pointer-events-none select-none" style={{ width: '40px', backgroundColor: '#030303', borderRight: '1px solid var(--border-dim)', color: '#222', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
-                                    {activeTab.content.split('\n').map((_, i) => (
-                                        <div key={i} style={{ height: '24px' }}>{i + 1}</div>
+                                    {activeTab.content.split('\n').map((line, i) => (
+                                        <div key={`${line}-${i}`} style={{ height: '24px' }}>{i + 1}</div>
                                     ))}
                                 </div>
                                 <Editor
@@ -266,7 +296,7 @@ export const VmPage: React.FC = () => {
 
                 {/* State/Memory inspector */}
                 <aside
-                    className="flex-shrink-0"
+                    className="sidebar-right flex-shrink-0"
                     style={{ width: '340px', borderLeft: '1px solid var(--border-dim)', backgroundColor: 'var(--bg-sidebar)' }}
                 >
                     <StackInspector stack={stack} />
@@ -277,4 +307,3 @@ export const VmPage: React.FC = () => {
         </div>
     );
 };
-

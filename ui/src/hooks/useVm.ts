@@ -51,7 +51,7 @@ export const useVm = () => {
                 type: val.startsWith('0x') ? 'hex' : 'string'
             })));
 
-            if (state.trace && state.trace.steps) {
+            if (state.trace?.steps) {
                 setTrace(state.trace.steps.map(step => ({
                     pc: step.pc,
                     op: step.opcode,
@@ -64,8 +64,10 @@ export const useVm = () => {
             addLog('Execution completed.');
 
         } catch (err) {
-            addLog('Error: Execution failed.');
+            const detail = err instanceof Error ? ` ${err.message}` : '';
+            addLog(`Error: Execution failed.${detail}`);
             setStatus('error');
+            throw err;
         }
     }, [wasmReady, addLog]);
 
